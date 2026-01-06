@@ -36,7 +36,7 @@ describe('AppController', () => {
           provide: ConfigService,
           useValue: {
             get: jest.fn((key: string, defaultValue?: any) => {
-              const config = {
+              const config: Record<string, any> = {
                 NODE_ENV: 'test',
                 npm_package_version: '1.0.0-test',
               };

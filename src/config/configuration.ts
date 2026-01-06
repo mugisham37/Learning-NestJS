@@ -19,6 +19,29 @@
 import { registerAs } from '@nestjs/config';
 
 /**
+ * Helper function to safely parse integers from environment variables
+ * 
+ * Educational: Environment variables are always strings, but we often need numbers.
+ * This helper provides safe parsing with fallback to default values.
+ */
+function parseIntSafe(value: string | undefined, defaultValue: number): number {
+  if (!value) return defaultValue;
+  const parsed = parseInt(value, 10);
+  return isNaN(parsed) ? defaultValue : parsed;
+}
+
+/**
+ * Helper function to safely parse booleans from environment variables
+ * 
+ * Educational: Environment variables are strings, but we need proper booleans.
+ * This helper converts string representations to actual boolean values.
+ */
+function parseBooleanSafe(value: string | undefined, defaultValue: boolean): boolean {
+  if (!value) return defaultValue;
+  return value.toLowerCase() === 'true';
+}
+
+/**
  * Application Configuration Interface
  * 
  * Educational: Type-safe configuration interfaces prevent runtime errors
@@ -142,7 +165,7 @@ export const configuration = () => ({
   // Application Configuration
   app: {
     nodeEnv: process.env.NODE_ENV || 'development',
-    port: parseInt(process.env.PORT, 10) || 3000,
+    port: parseIntSafe(process.env.PORT, 3000),
     apiPrefix: process.env.API_PREFIX || 'api/v1',
     corsOrigins: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:3000'],
   } as AppConfig,
@@ -151,15 +174,15 @@ export const configuration = () => ({
   database: {
     type: (process.env.DATABASE_TYPE as any) || 'postgres',
     host: process.env.DATABASE_HOST || 'localhost',
-    port: parseInt(process.env.DATABASE_PORT, 10) || 5432,
+    port: parseIntSafe(process.env.DATABASE_PORT, 5432),
     username: process.env.DATABASE_USERNAME || 'nestjs_user',
     password: process.env.DATABASE_PASSWORD || 'nestjs_password',
     database: process.env.DATABASE_NAME || 'nestjs_learning_platform',
-    synchronize: process.env.DATABASE_SYNCHRONIZE === 'true',
-    logging: process.env.DATABASE_LOGGING === 'true',
-    ssl: process.env.DATABASE_SSL === 'true',
-    retryAttempts: parseInt(process.env.DATABASE_RETRY_ATTEMPTS, 10) || 3,
-    retryDelay: parseInt(process.env.DATABASE_RETRY_DELAY, 10) || 3000,
+    synchronize: parseBooleanSafe(process.env.DATABASE_SYNCHRONIZE, false),
+    logging: parseBooleanSafe(process.env.DATABASE_LOGGING, false),
+    ssl: parseBooleanSafe(process.env.DATABASE_SSL, false),
+    retryAttempts: parseIntSafe(process.env.DATABASE_RETRY_ATTEMPTS, 3),
+    retryDelay: parseIntSafe(process.env.DATABASE_RETRY_DELAY, 3000),
   } as DatabaseConfig,
 
   // MongoDB Configuration
@@ -172,11 +195,11 @@ export const configuration = () => ({
   // Redis Configuration
   redis: {
     host: process.env.REDIS_HOST || 'localhost',
-    port: parseInt(process.env.REDIS_PORT, 10) || 6379,
+    port: parseIntSafe(process.env.REDIS_PORT, 6379),
     password: process.env.REDIS_PASSWORD || undefined,
-    db: parseInt(process.env.REDIS_DB, 10) || 0,
-    retryAttempts: parseInt(process.env.REDIS_RETRY_ATTEMPTS, 10) || 3,
-    retryDelay: parseInt(process.env.REDIS_RETRY_DELAY, 10) || 3000,
+    db: parseIntSafe(process.env.REDIS_DB, 0),
+    retryAttempts: parseIntSafe(process.env.REDIS_RETRY_ATTEMPTS, 3),
+    retryDelay: parseIntSafe(process.env.REDIS_RETRY_DELAY, 3000),
   } as RedisConfig,
 
   // JWT Configuration
@@ -202,7 +225,7 @@ export const configuration = () => ({
     resave: false,
     saveUninitialized: false,
     cookie: {
-      maxAge: parseInt(process.env.SESSION_MAX_AGE, 10) || 24 * 60 * 60 * 1000, // 24 hours
+      maxAge: parseIntSafe(process.env.SESSION_MAX_AGE, 24 * 60 * 60 * 1000), // 24 hours
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
     },
@@ -211,7 +234,7 @@ export const configuration = () => ({
   // File Upload Configuration
   fileUpload: {
     destination: process.env.UPLOAD_DEST || './uploads',
-    maxFileSize: parseInt(process.env.MAX_FILE_SIZE, 10) || 10 * 1024 * 1024, // 10MB
+    maxFileSize: parseIntSafe(process.env.MAX_FILE_SIZE, 10 * 1024 * 1024), // 10MB
     allowedMimeTypes: process.env.ALLOWED_FILE_TYPES?.split(',') || [
       'image/jpeg',
       'image/png',
@@ -224,8 +247,8 @@ export const configuration = () => ({
   // Email Configuration
   email: {
     host: process.env.SMTP_HOST || 'localhost',
-    port: parseInt(process.env.SMTP_PORT, 10) || 587,
-    secure: process.env.SMTP_SECURE === 'true',
+    port: parseIntSafe(process.env.SMTP_PORT, 587),
+    secure: parseBooleanSafe(process.env.SMTP_SECURE, false),
     auth: {
       user: process.env.SMTP_USER || '',
       pass: process.env.SMTP_PASS || '',
@@ -235,31 +258,31 @@ export const configuration = () => ({
 
   // Rate Limiting Configuration
   throttle: {
-    ttl: parseInt(process.env.THROTTLE_TTL, 10) || 60,
-    limit: parseInt(process.env.THROTTLE_LIMIT, 10) || 10,
+    ttl: parseIntSafe(process.env.THROTTLE_TTL, 60),
+    limit: parseIntSafe(process.env.THROTTLE_LIMIT, 10),
   } as ThrottleConfig,
 
   // Logging Configuration
   logging: {
     level: process.env.LOG_LEVEL || 'debug',
     file: process.env.LOG_FILE || 'logs/application.log',
-    enableConsole: process.env.LOG_ENABLE_CONSOLE !== 'false',
-    enableFile: process.env.LOG_ENABLE_FILE === 'true',
+    enableConsole: parseBooleanSafe(process.env.LOG_ENABLE_CONSOLE, true),
+    enableFile: parseBooleanSafe(process.env.LOG_ENABLE_FILE, false),
   } as LoggingConfig,
 
   // Health Check Configuration
   health: {
-    timeout: parseInt(process.env.HEALTH_CHECK_TIMEOUT, 10) || 5000,
+    timeout: parseIntSafe(process.env.HEALTH_CHECK_TIMEOUT, 5000),
   } as HealthConfig,
 
   // Feature Flags
   features: {
-    enableSwagger: process.env.ENABLE_SWAGGER !== 'false',
-    enableGraphql: process.env.ENABLE_GRAPHQL !== 'false',
-    enableWebsockets: process.env.ENABLE_WEBSOCKETS !== 'false',
-    enableMicroservices: process.env.ENABLE_MICROSERVICES === 'true',
-    enableCaching: process.env.ENABLE_CACHING !== 'false',
-    enableQueue: process.env.ENABLE_QUEUE !== 'false',
+    enableSwagger: parseBooleanSafe(process.env.ENABLE_SWAGGER, true),
+    enableGraphql: parseBooleanSafe(process.env.ENABLE_GRAPHQL, true),
+    enableWebsockets: parseBooleanSafe(process.env.ENABLE_WEBSOCKETS, true),
+    enableMicroservices: parseBooleanSafe(process.env.ENABLE_MICROSERVICES, false),
+    enableCaching: parseBooleanSafe(process.env.ENABLE_CACHING, true),
+    enableQueue: parseBooleanSafe(process.env.ENABLE_QUEUE, true),
   } as FeatureFlags,
 });
 
@@ -273,7 +296,7 @@ export const configuration = () => ({
 
 export const appConfig = registerAs('app', () => ({
   nodeEnv: process.env.NODE_ENV || 'development',
-  port: parseInt(process.env.PORT, 10) || 3000,
+  port: parseIntSafe(process.env.PORT, 3000),
   apiPrefix: process.env.API_PREFIX || 'api/v1',
   corsOrigins: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:3000'],
 }));
@@ -281,15 +304,15 @@ export const appConfig = registerAs('app', () => ({
 export const databaseConfig = registerAs('database', () => ({
   type: (process.env.DATABASE_TYPE as any) || 'postgres',
   host: process.env.DATABASE_HOST || 'localhost',
-  port: parseInt(process.env.DATABASE_PORT, 10) || 5432,
+  port: parseIntSafe(process.env.DATABASE_PORT, 5432),
   username: process.env.DATABASE_USERNAME || 'nestjs_user',
   password: process.env.DATABASE_PASSWORD || 'nestjs_password',
   database: process.env.DATABASE_NAME || 'nestjs_learning_platform',
-  synchronize: process.env.DATABASE_SYNCHRONIZE === 'true',
-  logging: process.env.DATABASE_LOGGING === 'true',
-  ssl: process.env.DATABASE_SSL === 'true',
-  retryAttempts: parseInt(process.env.DATABASE_RETRY_ATTEMPTS, 10) || 3,
-  retryDelay: parseInt(process.env.DATABASE_RETRY_DELAY, 10) || 3000,
+  synchronize: parseBooleanSafe(process.env.DATABASE_SYNCHRONIZE, false),
+  logging: parseBooleanSafe(process.env.DATABASE_LOGGING, false),
+  ssl: parseBooleanSafe(process.env.DATABASE_SSL, false),
+  retryAttempts: parseIntSafe(process.env.DATABASE_RETRY_ATTEMPTS, 3),
+  retryDelay: parseIntSafe(process.env.DATABASE_RETRY_DELAY, 3000),
 }));
 
 export const jwtConfig = registerAs('jwt', () => ({
@@ -301,9 +324,9 @@ export const jwtConfig = registerAs('jwt', () => ({
 
 export const redisConfig = registerAs('redis', () => ({
   host: process.env.REDIS_HOST || 'localhost',
-  port: parseInt(process.env.REDIS_PORT, 10) || 6379,
+  port: parseIntSafe(process.env.REDIS_PORT, 6379),
   password: process.env.REDIS_PASSWORD || undefined,
-  db: parseInt(process.env.REDIS_DB, 10) || 0,
-  retryAttempts: parseInt(process.env.REDIS_RETRY_ATTEMPTS, 10) || 3,
-  retryDelay: parseInt(process.env.REDIS_RETRY_DELAY, 10) || 3000,
+  db: parseIntSafe(process.env.REDIS_DB, 0),
+  retryAttempts: parseIntSafe(process.env.REDIS_RETRY_ATTEMPTS, 3),
+  retryDelay: parseIntSafe(process.env.REDIS_RETRY_DELAY, 3000),
 }));

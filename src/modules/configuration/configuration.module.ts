@@ -157,7 +157,7 @@ export class ConfigurationModule {
           useValue: options,
         },
       ],
-      exports: [ConfigurationService, ConfigService],
+      exports: [ConfigurationService],
       global: isGlobal,
     };
   }
@@ -179,34 +179,18 @@ export class ConfigurationModule {
       module: ConfigurationModule,
       imports: [
         ...imports,
-        ConfigModule.forRootAsync({
+        // Use the synchronous forRoot since we'll handle async in our factory
+        ConfigModule.forRoot({
           isGlobal,
-          imports,
-          useFactory: async (...args: any[]) => {
-            // Get configuration options from factory
-            const configOptions = useFactory ? await useFactory(...args) : {};
-            
-            const {
-              validate = true,
-              cache = true,
-              load = [configuration],
-              envFilePath = ['.env', '.env.local'],
-              expandVariables = true,
-            } = configOptions;
-
-            return {
-              cache,
-              load,
-              envFilePath,
-              expandVariables,
-              validationSchema: validate ? getValidationSchema() : undefined,
-              validationOptions: {
-                allowUnknown: true,
-                abortEarly: false,
-              },
-            };
+          cache: true,
+          load: [configuration],
+          envFilePath: ['.env', '.env.local'],
+          expandVariables: true,
+          validationSchema: getValidationSchema(),
+          validationOptions: {
+            allowUnknown: true,
+            abortEarly: false,
           },
-          inject,
         }),
       ],
       providers: [
@@ -217,7 +201,7 @@ export class ConfigurationModule {
           inject,
         },
       ],
-      exports: [ConfigurationService, ConfigService],
+      exports: [ConfigurationService],
       global: isGlobal,
     };
   }

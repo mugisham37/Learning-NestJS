@@ -42,7 +42,7 @@ async function bootstrap() {
   // Security middleware setup
   // Educational: Helmet sets various HTTP headers for security
   app.use(helmet({
-    contentSecurityPolicy: nodeEnv === 'production' ? undefined : false,
+    contentSecurityPolicy: nodeEnv === 'production',
   }));
 
   // Performance middleware

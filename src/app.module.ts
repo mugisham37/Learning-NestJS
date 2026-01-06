@@ -17,13 +17,11 @@
  */
 
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
-// Import configuration
-import { configuration } from './config/configuration';
-import { validationSchema } from './config/validation.schema';
+// Import our custom configuration module
+import { ConfigurationModule } from './modules/configuration/configuration.module';
 
 // Import core modules (will be created in subsequent tasks)
 // import { DatabaseModule } from './modules/database/database.module';
@@ -50,28 +48,18 @@ import { validationSchema } from './config/validation.schema';
 
 @Module({
   imports: [
-    // Configuration Module - Global configuration management
-    // Educational: ConfigModule.forRoot() makes configuration available globally
-    ConfigModule.forRoot({
-      // Load configuration from multiple sources
-      load: [configuration],
-      // Make configuration global (available in all modules without importing)
-      isGlobal: true,
-      // Validate configuration against Joi schema
-      validationSchema,
-      // Cache configuration for better performance
-      cache: true,
-      // Expand environment variables (e.g., ${HOME}/app -> /home/user/app)
-      expandVariables: true,
-    }),
+    // Configuration Module - Comprehensive configuration management
+    // Educational: Our custom ConfigurationModule demonstrates dynamic module patterns
+    // and provides type-safe, validated configuration access
+    ConfigurationModule.forApplication(),
 
     // Core Infrastructure Modules
     // Educational: These modules provide foundational services
     // DatabaseModule.forRootAsync({
-    //   useFactory: (configService: ConfigService) => ({
-    //     ...configService.get('database'),
+    //   useFactory: (configService: ConfigurationService) => ({
+    //     ...configService.database,
     //   }),
-    //   inject: [ConfigService],
+    //   inject: [ConfigurationService],
     // }),
     // SharedModule, // Global utilities and common services
 
