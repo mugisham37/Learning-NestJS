@@ -24,6 +24,7 @@ import { Todo } from './todos/todo.entity';
       }),
     }),
     TodosModule,
+
   ],
 
   controllers: [],
